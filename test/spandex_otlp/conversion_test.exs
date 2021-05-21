@@ -1,7 +1,7 @@
 defmodule SpandexOTLP.ConversionTest do
   use ExUnit.Case
 
-  #alias SpandexOTLP.Conversion
+  # alias SpandexOTLP.Conversion
 
   describe "traces_to_resource_span/1" do
     # test "converts `Spandex.Trace`s correctly" do
