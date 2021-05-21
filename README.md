@@ -1,5 +1,7 @@
 # SpandexOTLP
 
+[![Elixir](https://github.com/JohnDoneth/spandex_otlp/actions/workflows/elixir.yaml/badge.svg)](https://github.com/JohnDoneth/spandex_otlp/actions/workflows/elixir.yaml)
+
 A [OpenTelemetry Protocol](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/README.md) adapter for the [Spandex](https://github.com/spandex-project/spandex) library.
 
 ## Installation
