@@ -1,7 +1,7 @@
 defmodule SpandexOTLP.Conversion do
   @moduledoc false
 
-  alias SpandexOTLP.Opentelemetry.Proto.Trace.V1.{ResourceSpans, InstrumentationLibrarySpans}
+  alias SpandexOTLP.Opentelemetry.Proto.Trace.V1.{InstrumentationLibrarySpans, ResourceSpans}
   alias SpandexOTLP.Opentelemetry.Proto.Common.V1.{AnyValue, KeyValue}
   alias SpandexOTLP.Opentelemetry.Proto.Trace.V1.Span, as: OTLPSpan
 
@@ -62,6 +62,7 @@ defmodule SpandexOTLP.Conversion do
   defp resource_attribute(%{resource: resource}), do: [key_value("resource", resource)]
 
   defp sql_attributes(%{sql_query: nil}), do: []
+
   defp sql_attributes(%{sql_query: sql_query}) do
     [
       key_value("sql.query", sql_query[:query]),
@@ -97,9 +98,11 @@ defmodule SpandexOTLP.Conversion do
     config_resources = Enum.map(@resources, fn {k, v} -> key_value(k, v) end)
 
     %SpandexOTLP.Opentelemetry.Proto.Resource.V1.Resource{
-      attributes: config_resources ++ [
-        key_value("library.language", "elixir"),
-      ],
+      attributes:
+        config_resources ++
+          [
+            key_value("library.language", "elixir")
+          ],
       dropped_attributes_count: 0
     }
   end
