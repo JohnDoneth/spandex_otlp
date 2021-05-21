@@ -22,6 +22,9 @@ jobs:
 
       - name: Install Dependencies
         run: mix deps.get
+
+      - name: Build and check for warnings 
+        run: mix compile --force --warnings-as-errors
     
       - name: Check Formatting
         run: mix format --check-formatted
