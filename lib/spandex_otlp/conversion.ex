@@ -1,7 +1,7 @@
 defmodule SpandexOTLP.Conversion do
   @moduledoc false
 
-  alias SpandexOTLP.Opentelemetry.Proto.Trace.V1.{ResourceSpans, InstrumentationLibrarySpans}
+  alias SpandexOTLP.Opentelemetry.Proto.Trace.V1.{InstrumentationLibrarySpans, ResourceSpans}
   alias SpandexOTLP.Opentelemetry.Proto.Common.V1.{AnyValue, KeyValue}
   alias SpandexOTLP.Opentelemetry.Proto.Trace.V1.Span, as: OTLPSpan
 

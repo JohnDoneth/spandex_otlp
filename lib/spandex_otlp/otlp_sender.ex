@@ -42,8 +42,8 @@ defmodule SpandexOTLP.Sender do
     ]
   end
 
-  @spec start_link() :: GenServer.on_start()
-  def start_link(), do: start_link([])
+  @spec start_link :: GenServer.on_start()
+  def start_link, do: start_link([])
 
   @doc """
   Starts the GenServer with given options.
