@@ -7,7 +7,10 @@ defmodule SpandexOTLP.Opentelemetry.Proto.Collector.Logs.V1.ExportLogsServiceReq
         }
   defstruct [:resource_logs]
 
-  field :resource_logs, 1, repeated: true, type: SpandexOTLP.Opentelemetry.Proto.Logs.V1.ResourceLogs
+  field(:resource_logs, 1,
+    repeated: true,
+    type: SpandexOTLP.Opentelemetry.Proto.Logs.V1.ResourceLogs
+  )
 end
 
 defmodule SpandexOTLP.Opentelemetry.Proto.Collector.Logs.V1.ExportLogsServiceResponse do
@@ -22,9 +25,11 @@ defmodule SpandexOTLP.Opentelemetry.Proto.Collector.Logs.V1.LogsService.Service 
   @moduledoc false
   use GRPC.Service, name: "opentelemetry.proto.collector.logs.v1.LogsService"
 
-  rpc :Export,
-      SpandexOTLP.Opentelemetry.Proto.Collector.Logs.V1.ExportLogsServiceRequest,
-      SpandexOTLP.Opentelemetry.Proto.Collector.Logs.V1.ExportLogsServiceResponse
+  rpc(
+    :Export,
+    SpandexOTLP.Opentelemetry.Proto.Collector.Logs.V1.ExportLogsServiceRequest,
+    SpandexOTLP.Opentelemetry.Proto.Collector.Logs.V1.ExportLogsServiceResponse
+  )
 end
 
 defmodule SpandexOTLP.Opentelemetry.Proto.Collector.Logs.V1.LogsService.Stub do

@@ -7,7 +7,10 @@ defmodule SpandexOTLP.Opentelemetry.Proto.Collector.Trace.V1.ExportTraceServiceR
         }
   defstruct [:resource_spans]
 
-  field :resource_spans, 1, repeated: true, type: SpandexOTLP.Opentelemetry.Proto.Trace.V1.ResourceSpans
+  field(:resource_spans, 1,
+    repeated: true,
+    type: SpandexOTLP.Opentelemetry.Proto.Trace.V1.ResourceSpans
+  )
 end
 
 defmodule SpandexOTLP.Opentelemetry.Proto.Collector.Trace.V1.ExportTraceServiceResponse do
@@ -22,9 +25,11 @@ defmodule SpandexOTLP.Opentelemetry.Proto.Collector.Trace.V1.TraceService.Servic
   @moduledoc false
   use GRPC.Service, name: "opentelemetry.proto.collector.trace.v1.TraceService"
 
-  rpc :Export,
-      SpandexOTLP.Opentelemetry.Proto.Collector.Trace.V1.ExportTraceServiceRequest,
-      SpandexOTLP.Opentelemetry.Proto.Collector.Trace.V1.ExportTraceServiceResponse
+  rpc(
+    :Export,
+    SpandexOTLP.Opentelemetry.Proto.Collector.Trace.V1.ExportTraceServiceRequest,
+    SpandexOTLP.Opentelemetry.Proto.Collector.Trace.V1.ExportTraceServiceResponse
+  )
 end
 
 defmodule SpandexOTLP.Opentelemetry.Proto.Collector.Trace.V1.TraceService.Stub do

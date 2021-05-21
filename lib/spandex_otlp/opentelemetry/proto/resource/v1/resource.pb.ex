@@ -8,6 +8,6 @@ defmodule SpandexOTLP.Opentelemetry.Proto.Resource.V1.Resource do
         }
   defstruct [:attributes, :dropped_attributes_count]
 
-  field :attributes, 1, repeated: true, type: SpandexOTLP.Opentelemetry.Proto.Common.V1.KeyValue
-  field :dropped_attributes_count, 2, type: :uint32
+  field(:attributes, 1, repeated: true, type: SpandexOTLP.Opentelemetry.Proto.Common.V1.KeyValue)
+  field(:dropped_attributes_count, 2, type: :uint32)
 end

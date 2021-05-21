@@ -7,15 +7,15 @@ defmodule SpandexOTLP.Opentelemetry.Proto.Common.V1.AnyValue do
         }
   defstruct [:value]
 
-  oneof :value, 0
+  oneof(:value, 0)
 
-  field :string_value, 1, type: :string, oneof: 0
-  field :bool_value, 2, type: :bool, oneof: 0
-  field :int_value, 3, type: :int64, oneof: 0
-  field :double_value, 4, type: :double, oneof: 0
-  field :array_value, 5, type: SpandexOTLP.Opentelemetry.Proto.Common.V1.ArrayValue, oneof: 0
-  field :kvlist_value, 6, type: SpandexOTLP.Opentelemetry.Proto.Common.V1.KeyValueList, oneof: 0
-  field :bytes_value, 7, type: :bytes, oneof: 0
+  field(:string_value, 1, type: :string, oneof: 0)
+  field(:bool_value, 2, type: :bool, oneof: 0)
+  field(:int_value, 3, type: :int64, oneof: 0)
+  field(:double_value, 4, type: :double, oneof: 0)
+  field(:array_value, 5, type: SpandexOTLP.Opentelemetry.Proto.Common.V1.ArrayValue, oneof: 0)
+  field(:kvlist_value, 6, type: SpandexOTLP.Opentelemetry.Proto.Common.V1.KeyValueList, oneof: 0)
+  field(:bytes_value, 7, type: :bytes, oneof: 0)
 end
 
 defmodule SpandexOTLP.Opentelemetry.Proto.Common.V1.ArrayValue do
@@ -27,7 +27,7 @@ defmodule SpandexOTLP.Opentelemetry.Proto.Common.V1.ArrayValue do
         }
   defstruct [:values]
 
-  field :values, 1, repeated: true, type: SpandexOTLP.Opentelemetry.Proto.Common.V1.AnyValue
+  field(:values, 1, repeated: true, type: SpandexOTLP.Opentelemetry.Proto.Common.V1.AnyValue)
 end
 
 defmodule SpandexOTLP.Opentelemetry.Proto.Common.V1.KeyValueList do
@@ -39,7 +39,7 @@ defmodule SpandexOTLP.Opentelemetry.Proto.Common.V1.KeyValueList do
         }
   defstruct [:values]
 
-  field :values, 1, repeated: true, type: SpandexOTLP.Opentelemetry.Proto.Common.V1.KeyValue
+  field(:values, 1, repeated: true, type: SpandexOTLP.Opentelemetry.Proto.Common.V1.KeyValue)
 end
 
 defmodule SpandexOTLP.Opentelemetry.Proto.Common.V1.KeyValue do
@@ -52,8 +52,8 @@ defmodule SpandexOTLP.Opentelemetry.Proto.Common.V1.KeyValue do
         }
   defstruct [:key, :value]
 
-  field :key, 1, type: :string
-  field :value, 2, type: SpandexOTLP.Opentelemetry.Proto.Common.V1.AnyValue
+  field(:key, 1, type: :string)
+  field(:value, 2, type: SpandexOTLP.Opentelemetry.Proto.Common.V1.AnyValue)
 end
 
 defmodule SpandexOTLP.Opentelemetry.Proto.Common.V1.StringKeyValue do
@@ -66,8 +66,8 @@ defmodule SpandexOTLP.Opentelemetry.Proto.Common.V1.StringKeyValue do
         }
   defstruct [:key, :value]
 
-  field :key, 1, type: :string
-  field :value, 2, type: :string
+  field(:key, 1, type: :string)
+  field(:value, 2, type: :string)
 end
 
 defmodule SpandexOTLP.Opentelemetry.Proto.Common.V1.InstrumentationLibrary do
@@ -80,6 +80,6 @@ defmodule SpandexOTLP.Opentelemetry.Proto.Common.V1.InstrumentationLibrary do
         }
   defstruct [:name, :version]
 
-  field :name, 1, type: :string
-  field :version, 2, type: :string
+  field(:name, 1, type: :string)
+  field(:version, 2, type: :string)
 end

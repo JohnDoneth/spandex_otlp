@@ -16,7 +16,9 @@ defmodule SpandexOTLP.Sender do
 
   defp ca_cert_file do
     case Application.get_env(:spandex_otlp, :ca_cert_file, nil) do
-      nil -> nil
+      nil ->
+        nil
+
       ca_cert_file ->
         otp_app()
         |> :code.priv_dir()
@@ -56,19 +58,23 @@ defmodule SpandexOTLP.Sender do
   def init(_opts) do
     {:ok, channel} = connect()
 
-    {:ok, %State {
-      channel: channel
-    }}
+    {:ok,
+     %State{
+       channel: channel
+     }}
   end
 
   defp connect do
-    opts = case ca_cert_file() do
-      nil -> []
-      ca_path -> [cred: GRPC.Credential.new(ssl: [cacertfile: ca_path])]
-    end
+    opts =
+      case ca_cert_file() do
+        nil -> []
+        ca_path -> [cred: GRPC.Credential.new(ssl: [cacertfile: ca_path])]
+      end
 
     case GRPC.Stub.connect(@endpoint, opts) do
-      {:ok, channel} -> {:ok, channel}
+      {:ok, channel} ->
+        {:ok, channel}
+
       {:error, error} ->
         Logger.error("Failed to connect to OTLP endpoint: #{error}")
         {:error, error}
@@ -91,12 +97,13 @@ defmodule SpandexOTLP.Sender do
   def handle_call({:send_trace, trace}, _from, state) do
     headers = Application.get_env(:spandex_otlp, :headers, %{})
 
-    request = ExportTraceServiceRequest.new(
-      resource_spans: Conversion.traces_to_resource_spans([trace])
-    )
+    request =
+      ExportTraceServiceRequest.new(resource_spans: Conversion.traces_to_resource_spans([trace]))
 
     case TraceService.Stub.export(state.channel, request, metadata: headers) do
-      {:ok, _response} -> :ok
+      {:ok, _response} ->
+        :ok
+
       {:error, error} ->
         Logger.error("Failed to send trace data: #{error}")
     end

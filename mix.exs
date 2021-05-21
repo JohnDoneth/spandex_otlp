@@ -7,13 +7,14 @@ defmodule SpandexOLTP.MixProject do
   def project do
     [
       app: :spandex_otlp,
-      description: "An adapter for Spandex that allows the export of tracing data to an OTLP compatible service.",
+      description:
+        "An adapter for Spandex that allows the export of tracing data to an OTLP compatible service.",
       version: @version,
       elixir: "~> 1.11.0",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       docs: docs(),
-      package: package(),
+      package: package()
     ]
   end
 
@@ -47,7 +48,7 @@ defmodule SpandexOLTP.MixProject do
       {:spandex, "~> 3.0"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.24", only: :dev, runtime: false},
-      {:telemetry, "~> 0.4"},
+      {:telemetry, "~> 0.4"}
     ]
   end
 end
