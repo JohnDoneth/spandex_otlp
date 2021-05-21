@@ -1,6 +1,6 @@
 # SpandexOTLP
 
-A [OTLP](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/README.md) adapter for the [Spandex](https://github.com/spandex-project/spandex) library.
+A [OpenTelemetry Protocol](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/README.md) adapter for the [Spandex](https://github.com/spandex-project/spandex) library.
 
 ## Installation
 
