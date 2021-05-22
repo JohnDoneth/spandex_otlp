@@ -34,3 +34,6 @@ jobs:
 
       - name: Run Tests
         run: mix test
+      
+      - name: Upload Coverage
+        run: bash <(curl -s https://codecov.io/bash)
