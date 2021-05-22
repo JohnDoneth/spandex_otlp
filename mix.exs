@@ -1,4 +1,4 @@
-defmodule SpandexOLTP.MixProject do
+defmodule SpandexOTLP.MixProject do
   use Mix.Project
 
   @version "0.1.0"
@@ -11,10 +11,18 @@ defmodule SpandexOLTP.MixProject do
         "An adapter for Spandex that allows the export of tracing data to an OTLP compatible service.",
       version: @version,
       elixir: "~> 1.11.0",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       docs: docs(),
-      package: package()
+      package: package(),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ]
     ]
   end
 
@@ -41,14 +49,18 @@ defmodule SpandexOLTP.MixProject do
     ]
   end
 
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
+
   defp deps do
     [
       {:grpc, github: "elixir-grpc/grpc"},
       {:gun, "~> 2.0.0", hex: :grpc_gun, override: true},
       {:spandex, "~> 3.0"},
+      {:telemetry, "~> 0.4"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.24", only: :dev, runtime: false},
-      {:telemetry, "~> 0.4"}
+      {:excoveralls, "~> 0.14", only: [:test]}
     ]
   end
 end
