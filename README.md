@@ -7,8 +7,7 @@ A [OpenTelemetry Protocol](https://github.com/open-telemetry/opentelemetry-speci
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `spandex_otlp` to your list of dependencies in `mix.exs`:
+Add `spandex_otlp` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -18,7 +17,43 @@ def deps do
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/spandex_otlp](https://hexdocs.pm/spandex_otlp).
+## Getting Started
 
+You must first follow the steps in the Spandex guide to get Spandex setup while substituting `SpandexOTLP.Adapter` for `SpandexDatadog.Adapter`.
+
+```elixir
+config :my_app, MyApp.Tracer,
+  adapter: SpandexOTLP.Adapter
+```
+
+Then make the following changes to your `config.exs` to configure this adapter.
+
+```elixir
+config :spandex_otlp, SpandexOTLP,
+  otp_app: :my_app,
+  endpoint: "<host:port>",
+  ca_cert_file: "./tls/ca.pem", # Path to your PEM file in your priv directory. Only if you plan on using HTTPS.
+  headers: %{},
+  resources: %{
+    "service.name" => "<Your Service Name>",
+    "service.namespace" => "<Your Service Namespace>"
+  }
+```
+
+### Configuring for Lightstep
+
+If you plan on using [Lightstep](https://lightstep.com/) with this adapter. You can follow this example config to get started.
+
+```elixir
+config :spandex_otlp, SpandexOTLP,
+  otp_app: :my_app,
+  endpoint: "ingest.lightstep.com:443",
+  ca_cert_file: "./tls/ca.pem", # It's required to use HTTPS with Lightstep
+  headers: %{
+    "lightstep-access-token": "<your lightstep access token>"
+  },
+  resources: %{
+    "service.name" => "<Your Service Name>", # Required by Lightstep
+    "service.namespace" => "<Your Service Namespace>" # Required by Lightstep
+  }
+```
