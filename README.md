@@ -40,6 +40,14 @@ config :spandex_otlp, SpandexOTLP,
   }
 ```
 
+Then add the `SpandexOTLP.Sender` to your application supervision tree.
+
+```elixir
+children = [
+  SpandexOTLP.Sender
+]
+```
+
 ### Configuring for Lightstep
 
 If you plan on using [Lightstep](https://lightstep.com/) with this adapter. You can follow this example config to get started.
