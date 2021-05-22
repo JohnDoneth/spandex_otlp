@@ -21,7 +21,8 @@ defmodule SpandexOTLP.MixProject do
         coveralls: :test,
         "coveralls.json": :test,
         "coveralls.html": :test
-      ]
+      ],
+      source_url: @source_url
     ]
   end
 
