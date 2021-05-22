@@ -2,7 +2,7 @@ defmodule SpandexOTLP.MixProject do
   use Mix.Project
 
   @version "0.1.0"
-  @source_url "#TODO"
+  @source_url "https://github.com/JohnDoneth/spandex_otlp"
 
   def project do
     [
@@ -30,7 +30,10 @@ defmodule SpandexOTLP.MixProject do
       name: :spandex_otlp,
       maintainers: ["John Doneth"],
       licenses: ["MIT License"],
-      links: %{"GitHub" => @source_url}
+      links: %{
+        GitHub: @source_url,
+        Changelog: "#{@source_url}/blob/master/CHANGELOG.md"
+      }
     ]
   end
 
