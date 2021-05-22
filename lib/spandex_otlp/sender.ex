@@ -12,25 +12,37 @@ defmodule SpandexOTLP.Sender do
   alias SpandexOTLP.Opentelemetry.Proto.Collector.Trace.V1.ExportTraceServiceRequest
   alias SpandexOTLP.Opentelemetry.Proto.Collector.Trace.V1.TraceService
 
-  @endpoint Application.compile_env(:spandex_otlp, :endpoint, "localhost:4317")
-
-  defp ca_cert_file do
-    case Application.get_env(:spandex_otlp, :ca_cert_file, nil) do
-      nil ->
-        nil
-
-      ca_cert_file ->
-        otp_app()
-        |> :code.priv_dir()
-        |> Path.join(ca_cert_file)
+  defp require_config_for(config, key) do
+    if Map.has_key?(config, key) do
+      config
+    else
+      raise "`Missing config: `#{key}` needs to be set!"
     end
   end
 
-  defp otp_app do
-    case Application.get_env(:spandex_otlp, :otp_app) do
-      nil -> raise "otp_app needs to be set!"
-      otp_app -> otp_app
-    end
+  defp get_config(opts) do
+    app_config =
+      case Application.get_env(:spandex_otlp, SpandexOTLP) do
+        nil -> %{}
+        config -> Enum.into(config, %{})
+      end
+
+    config =
+      app_config
+      |> Map.merge(opts)
+      |> require_config_for(:endpoint)
+
+    Map.update(config, :ca_cert_file, nil, fn ca_cert_file ->
+      case ca_cert_file do
+        nil ->
+          nil
+
+        ca_cert_file ->
+          config.otp_app
+          |> :code.priv_dir()
+          |> Path.join(ca_cert_file)
+      end
+    end)
   end
 
   defmodule State do
@@ -38,40 +50,48 @@ defmodule SpandexOTLP.Sender do
     @type t :: %State{}
 
     defstruct [
-      :channel
+      :channel,
+      :metadata
     ]
   end
-
-  @spec start_link :: GenServer.on_start()
-  def start_link, do: start_link([])
 
   @doc """
   Starts the GenServer with given options.
   """
   @spec start_link(opts :: Keyword.t()) :: GenServer.on_start()
   def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+    case GenServer.start_link(__MODULE__, opts, name: __MODULE__) do
+      {:ok, s} -> {:ok, s}
+      {:error, e} -> {:stop, e}
+    end
   end
 
   @doc false
   @spec init(opts :: Keyword.t()) :: {:ok, State.t()}
-  def init(_opts) do
-    {:ok, channel} = connect()
+  def init(opts) do
+    config = get_config(Enum.into(opts, %{}))
 
-    {:ok,
-     %State{
-       channel: channel
-     }}
+    case connect(config) do
+      {:ok, channel} ->
+        {:ok,
+         %State{
+           channel: channel,
+           metadata: Map.get(config, :headers, %{})
+         }}
+
+      {:error, reason} ->
+        {:stop, reason}
+    end
   end
 
-  defp connect do
+  defp connect(config) do
     opts =
-      case ca_cert_file() do
+      case config.ca_cert_file do
         nil -> []
         ca_path -> [cred: GRPC.Credential.new(ssl: [cacertfile: ca_path])]
       end
 
-    case GRPC.Stub.connect(@endpoint, opts) do
+    case GRPC.Stub.connect(config.endpoint, opts) do
       {:ok, channel} ->
         {:ok, channel}
 
@@ -95,17 +115,15 @@ defmodule SpandexOTLP.Sender do
 
   @doc false
   def handle_call({:send_trace, trace}, _from, state) do
-    headers = Application.get_env(:spandex_otlp, :headers, %{})
-
     request =
       ExportTraceServiceRequest.new(resource_spans: Conversion.traces_to_resource_spans([trace]))
 
-    case TraceService.Stub.export(state.channel, request, metadata: headers) do
+    case TraceService.Stub.export(state.channel, request, metadata: state.metadata) do
       {:ok, _response} ->
         :ok
 
       {:error, error} ->
-        Logger.error("Failed to send trace data: #{error}")
+        Logger.error("Error while exporting trace data: #{inspect(error)}")
     end
 
     {:reply, :ok, state}

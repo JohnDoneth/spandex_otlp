@@ -5,7 +5,7 @@ defmodule SpandexOTLP.Conversion do
   alias SpandexOTLP.Opentelemetry.Proto.Common.V1.{AnyValue, KeyValue}
   alias SpandexOTLP.Opentelemetry.Proto.Trace.V1.Span, as: OTLPSpan
 
-  @resources Application.compile_env(:spandex_otlp, :resources, %{})
+  @resources Application.compile_env(:spandex_otlp, SpandexOTLP)[:resources] || []
 
   @doc false
   @spec traces_to_resource_spans([Spandex.Trace.t()]) :: [ResourceSpans.t()]
@@ -21,7 +21,6 @@ defmodule SpandexOTLP.Conversion do
     end)
   end
 
-  @spec instrumentation_library_spans(Spandex.Trace.t()) :: InstrumentationLibrarySpans.t()
   defp instrumentation_library_spans(spandex_trace) do
     {:ok, version} = :application.get_key(:spandex_otlp, :vsn)
 
@@ -35,27 +34,35 @@ defmodule SpandexOTLP.Conversion do
     }
   end
 
+  defp convert_parent_id(nil), do: nil
+
+  defp convert_parent_id(parent_id) do
+    <<parent_id::native-size(64)>>
+  end
+
+  def convert_span(span) do
+    %SpandexOTLP.Opentelemetry.Proto.Trace.V1.Span{
+      trace_id: <<span.trace_id::native-size(128)>>,
+      span_id: <<span.id::native-size(64)>>,
+      trace_state: "",
+      parent_span_id: convert_parent_id(span.parent_id),
+      name: span.name,
+      kind: :SPAN_KIND_INTERNAL,
+      start_time_unix_nano: span.start,
+      end_time_unix_nano: span.completion_time,
+      attributes: attributes_from_span_tags(span),
+      dropped_attributes_count: 0,
+      events: [],
+      dropped_events_count: 0,
+      links: [],
+      dropped_links_count: 0,
+      status: nil
+    }
+  end
+
   @spec spans(Spandex.Trace.t()) :: [OTLPSpan.t()]
   defp spans(spandex_trace) do
-    Enum.map(spandex_trace.spans, fn spandex_span ->
-      %SpandexOTLP.Opentelemetry.Proto.Trace.V1.Span{
-        trace_id: spandex_span.trace_id,
-        span_id: spandex_span.id,
-        trace_state: "",
-        parent_span_id: spandex_span.parent_id,
-        name: spandex_span.name,
-        kind: :SPAN_KIND_INTERNAL,
-        start_time_unix_nano: spandex_span.start,
-        end_time_unix_nano: spandex_span.completion_time,
-        attributes: attributes_from_span_tags(spandex_span),
-        dropped_attributes_count: 0,
-        events: [],
-        dropped_events_count: 0,
-        links: [],
-        dropped_links_count: 0,
-        status: nil
-      }
-    end)
+    Enum.map(spandex_trace.spans, &convert_span/1)
   end
 
   defp resource_attribute(%{resource: nil}), do: []
@@ -74,10 +81,7 @@ defmodule SpandexOTLP.Conversion do
   defp attributes_from_span_tags(spandex_span) do
     spandex_span.tags
     |> Enum.map(fn {key, value} ->
-      %KeyValue{
-        key: convert_key(key),
-        value: %AnyValue{value: {:string_value, inspect(value)}}
-      }
+      key_value(key, value)
     end)
     |> Kernel.++(resource_attribute(spandex_span))
     |> Kernel.++(sql_attributes(spandex_span))
@@ -87,10 +91,24 @@ defmodule SpandexOTLP.Conversion do
   def convert_key(key) when is_binary(key), do: key
   def convert_key(key), do: inspect(key)
 
+  defp convert_value(value) when is_binary(value) do
+    %AnyValue{value: {:string_value, value}}
+  end
+
+  defp convert_value(value) when is_integer(value) do
+    %AnyValue{value: {:int_value, value}}
+  end
+
+  defp convert_value(value) when is_boolean(value) do
+    %AnyValue{value: {:bool_value, value}}
+  end
+
+  defp convert_value(value), do: convert_value(inspect(value))
+
   defp key_value(key, value) do
     %KeyValue{
-      key: key,
-      value: %AnyValue{value: {:string_value, value}}
+      key: convert_key(key),
+      value: convert_value(value)
     }
   end
 
