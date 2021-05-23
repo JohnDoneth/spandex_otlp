@@ -57,8 +57,7 @@ defmodule SpandexOTLP.MixProject do
 
   defp deps do
     [
-      {:grpc, github: "elixir-grpc/grpc"},
-      {:gun, "~> 2.0.0", hex: :grpc_gun, override: true},
+      {:grpc, "0.5.0-beta.1"},
       {:spandex, "~> 3.0"},
       {:telemetry, "~> 0.4"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
