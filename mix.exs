@@ -1,7 +1,7 @@
 defmodule SpandexOTLP.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.1.0-rc.0"
   @source_url "https://github.com/JohnDoneth/spandex_otlp"
 
   def project do
@@ -57,7 +57,7 @@ defmodule SpandexOTLP.MixProject do
 
   defp deps do
     [
-      {:grpc, git: "https://github.com/elixir-grpc/grpc.git", ref: "0a457dd"},
+      {:grpc, "0.5.0-beta.1"},
       {:spandex, "~> 3.0"},
       {:telemetry, "~> 0.4"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
