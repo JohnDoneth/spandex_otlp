@@ -40,7 +40,7 @@ config :spandex_otlp, SpandexOTLP,
   }
 ```
 
-Then add the `SpandexOTLP.Sender` to your application supervision tree.
+Then add `SpandexOTLP.Sender` to your application supervision tree.
 
 ```elixir
 children = [

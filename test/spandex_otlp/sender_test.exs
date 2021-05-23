@@ -14,26 +14,25 @@ defmodule SpandexOTLP.SenderTest do
   describe "send_trace/2" do
     test "is recieved by the server process" do
       run_endpoint(SpandexOTLP.TestEndpoint, fn ->
-        SpandexOTLP.Sender.send_trace(%Spandex.Trace{})
+        ExUnit.CaptureLog.capture_log(fn ->
+          SpandexOTLP.Sender.send_trace(%Spandex.Trace{})
 
-        requests = SpandexOTLP.RequestStore.requests()
+          requests = SpandexOTLP.RequestStore.requests()
 
-        assert length(requests) == 1
+          assert length(requests) == 1
+        end)
       end)
     end
 
     test "sends a trace" do
       run_endpoint(SpandexOTLP.TestEndpoint, fn ->
-        SpandexOTLP.Sender.send_trace(%Spandex.Trace{id: "1234"})
+        ExUnit.CaptureLog.capture_log(fn ->
+          SpandexOTLP.Sender.send_trace(%Spandex.Trace{id: "1234"})
 
-        # [request] = SpandexOTLP.RequestStore.requests()
-
-        # assert request
+          # [request] = SpandexOTLP.RequestStore.requests()
+          # assert request
+        end)
       end)
     end
-
-    # test "handles errors while exporting trace data" do
-
-    # end
   end
 end

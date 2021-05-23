@@ -22,30 +22,22 @@ defmodule SpandexOTLP.Conversion do
   end
 
   defp instrumentation_library_spans(spandex_trace) do
-    {:ok, version} = :application.get_key(:spandex_otlp, :vsn)
-
     %InstrumentationLibrarySpans{
       instrumentation_library: %{
-        name: "Spandex OTLP",
-        version: version
+        name: "SpandexOTLP",
+        version: library_version()
       },
       spans: spans(spandex_trace),
       schema_url: ""
     }
   end
 
-  defp convert_parent_id(nil), do: nil
-
-  defp convert_parent_id(parent_id) do
-    <<parent_id::native-size(64)>>
-  end
-
   def convert_span(span) do
     %SpandexOTLP.Opentelemetry.Proto.Trace.V1.Span{
-      trace_id: <<span.trace_id::native-size(128)>>,
-      span_id: <<span.id::native-size(64)>>,
+      trace_id: span.trace_id,
+      span_id: span.id,
       trace_state: "",
-      parent_span_id: convert_parent_id(span.parent_id),
+      parent_span_id: span.parent_id,
       name: span.name,
       kind: :SPAN_KIND_INTERNAL,
       start_time_unix_nano: span.start,
@@ -119,9 +111,16 @@ defmodule SpandexOTLP.Conversion do
       attributes:
         config_resources ++
           [
-            key_value("library.language", "elixir")
+            key_value("library.name", "SpandexOTLP"),
+            key_value("library.language", "elixir"),
+            key_value("library.version", library_version())
           ],
       dropped_attributes_count: 0
     }
+  end
+
+  defp library_version do
+    {:ok, version} = :application.get_key(:spandex_otlp, :vsn)
+    :binary.list_to_bin(version)
   end
 end

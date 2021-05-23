@@ -12,6 +12,8 @@ defmodule SpandexOTLP.Sender do
   alias SpandexOTLP.Opentelemetry.Proto.Collector.Trace.V1.ExportTraceServiceRequest
   alias SpandexOTLP.Opentelemetry.Proto.Collector.Trace.V1.TraceService
 
+  @app_config Application.get_env(:spandex_otlp, SpandexOTLP)
+
   defp require_config_for(config, key) do
     if Map.has_key?(config, key) do
       config
@@ -22,7 +24,7 @@ defmodule SpandexOTLP.Sender do
 
   defp get_config(opts) do
     app_config =
-      case Application.get_env(:spandex_otlp, SpandexOTLP) do
+      case @app_config do
         nil -> %{}
         config -> Enum.into(config, %{})
       end
