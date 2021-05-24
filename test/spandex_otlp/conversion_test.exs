@@ -142,8 +142,6 @@ defmodule SpandexOTLP.ConversionTest do
     end
 
     test "converts message with error? flag" do
-      {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
-
       converted_span = Conversion.convert_span(span_factory(
         error: [
           error?: true
