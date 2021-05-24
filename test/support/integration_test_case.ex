@@ -26,7 +26,12 @@ defmodule SpandexOTLP.Integration.TestCase do
         GRPC.Server.start_endpoint(endpoint, 0)
       end
 
-    SpandexOTLP.Sender.start_link(endpoint: "localhost:#{port}")
+    options =
+      options
+      |> Keyword.delete(:dont_start_remote)
+      |> Keyword.put_new(:endpoint, "localhost:#{port}")
+
+    SpandexOTLP.Sender.start_link(options)
 
     try do
       func.()
