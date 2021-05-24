@@ -21,7 +21,7 @@ defmodule SpandexOTLP.Sender do
     end
   end
 
-  defp default_config() do
+  defp default_config do
     %{
       batch: %{
         timeout: {200, :milliseconds},
