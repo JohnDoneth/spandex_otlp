@@ -12,7 +12,7 @@ Add `spandex_otlp` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:spandex_otlp, "~> 0.1.0-rc.1"}
+    {:spandex_otlp, "~> 0.1.0-rc.2"}
   ]
 end
 ```

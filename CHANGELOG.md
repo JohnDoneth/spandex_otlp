@@ -1,6 +1,6 @@
 # Changelog
 
-### Unreleased
+### v0.1.0-rc.2
 
 - Configurable span batching [#5](https://github.com/JohnDoneth/spandex_otlp/pull/5).
 - Handle conversion of Spandex error fields [#4](https://github.com/JohnDoneth/spandex_otlp/pull/4).
