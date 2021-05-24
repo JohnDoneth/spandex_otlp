@@ -1,6 +1,8 @@
 defmodule SpandexOTLP.Conversion do
   @moduledoc false
 
+  alias Spandex.Span
+
   alias SpandexOTLP.Opentelemetry.Proto.Trace.V1.{InstrumentationLibrarySpans, ResourceSpans}
   alias SpandexOTLP.Opentelemetry.Proto.Common.V1.{AnyValue, KeyValue}
   alias SpandexOTLP.Opentelemetry.Proto.Trace.V1.Span, as: OTLPSpan
@@ -48,8 +50,38 @@ defmodule SpandexOTLP.Conversion do
       dropped_events_count: 0,
       links: [],
       dropped_links_count: 0,
-      status: nil
+      status: convert_status(span)
     }
+  end
+
+  defp convert_status(%Span{error: nil}) do
+    %SpandexOTLP.Opentelemetry.Proto.Trace.V1.Status{
+      deprecated_code: :DEPRECATED_STATUS_CODE_OK,
+      message: nil,
+      code: :STATUS_CODE_OK
+    }
+  end
+
+  defp convert_status(%Span{error: error}) do
+    %SpandexOTLP.Opentelemetry.Proto.Trace.V1.Status{
+      deprecated_code: :DEPRECATED_STATUS_CODE_UNAVAILABLE,
+      message: error_message(error),
+      code: :STATUS_CODE_ERROR
+    }
+  end
+
+  @spec error_message(keyword()) :: String.t()
+  defp error_message(error) do
+    cond do
+      Keyword.has_key?(error, :exception) ->
+        Exception.message(error[:exception])
+
+      Keyword.has_key?(error, :message) ->
+        error[:message]
+
+      true ->
+        nil
+    end
   end
 
   @spec spans(Spandex.Trace.t()) :: [OTLPSpan.t()]
@@ -57,17 +89,47 @@ defmodule SpandexOTLP.Conversion do
     Enum.map(spandex_trace.spans, &convert_span/1)
   end
 
-  defp resource_attribute(%{resource: nil}), do: []
-  defp resource_attribute(%{resource: resource}), do: [key_value("resource", resource)]
+  defp resource_attribute(%Span{resource: nil}), do: []
+  defp resource_attribute(%Span{resource: resource}), do: [key_value("resource", resource)]
 
-  defp sql_attributes(%{sql_query: nil}), do: []
+  defp sql_attributes(%Span{sql_query: nil}), do: []
 
-  defp sql_attributes(%{sql_query: sql_query}) do
+  defp sql_attributes(%Span{sql_query: sql_query}) do
     [
       key_value("sql.query", sql_query[:query]),
       key_value("sql.rows", sql_query[:rows]),
       key_value("sql.db", sql_query[:db])
     ]
+  end
+
+  defp error_attributes(%Span{error: error}) do
+    %{}
+    |> add_error_type(error[:exception])
+    |> add_error_message(error[:exception])
+    |> add_error_stacktrace(error[:stacktrace])
+    |> Map.to_list()
+    |> Enum.map(fn {key, value} -> key_value(key, value) end)
+  end
+
+  @spec add_error_type(map(), Exception.t() | nil) :: map()
+  defp add_error_type(attrs, nil), do: attrs
+
+  defp add_error_type(attrs, exception) do
+    Map.put(attrs, "exception.type", inspect(exception.__struct__))
+  end
+
+  @spec add_error_message(map(), Exception.t() | nil) :: map()
+  defp add_error_message(attrs, nil), do: attrs
+
+  defp add_error_message(attrs, exception) do
+    Map.put(attrs, "exception.message", Exception.message(exception))
+  end
+
+  @spec add_error_stacktrace(map(), Exception.t() | nil) :: map()
+  defp add_error_stacktrace(attrs, nil), do: attrs
+
+  defp add_error_stacktrace(attrs, stacktrace) do
+    Map.put(attrs, "exception.stacktrace", Exception.format_stacktrace(stacktrace))
   end
 
   defp attributes_from_span_tags(spandex_span) do
@@ -77,6 +139,7 @@ defmodule SpandexOTLP.Conversion do
     end)
     |> Kernel.++(resource_attribute(spandex_span))
     |> Kernel.++(sql_attributes(spandex_span))
+    |> Kernel.++(error_attributes(spandex_span))
   end
 
   def convert_key(key) when is_atom(key), do: Atom.to_string(key)
