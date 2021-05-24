@@ -11,6 +11,7 @@ defmodule SpandexOTLP.Sender do
   alias SpandexOTLP.Conversion
   alias SpandexOTLP.Opentelemetry.Proto.Collector.Trace.V1.ExportTraceServiceRequest
   alias SpandexOTLP.Opentelemetry.Proto.Collector.Trace.V1.TraceService
+  alias SpandexOTLP.Opentelemetry.Proto.Trace.V1.ResourceSpans
 
   defp require_config_for(config, key) do
     if Map.has_key?(config, key) do
@@ -18,6 +19,15 @@ defmodule SpandexOTLP.Sender do
     else
       raise "`Missing config: `#{key}` needs to be set!"
     end
+  end
+
+  defp default_config do
+    %{
+      batch: %{
+        timeout: {200, :milliseconds},
+        send_batch_size: 8192
+      }
+    }
   end
 
   defp get_config(opts) do
@@ -28,7 +38,8 @@ defmodule SpandexOTLP.Sender do
       end
 
     config =
-      app_config
+      default_config()
+      |> Map.merge(app_config)
       |> Map.merge(opts)
       |> require_config_for(:endpoint)
 
@@ -47,11 +58,28 @@ defmodule SpandexOTLP.Sender do
 
   defmodule State do
     @moduledoc false
-    @type t :: %State{}
+    @type t :: %State{
+            channel: any(),
+            metadata: map(),
+            # Settings for trace batching
+            batch: %{
+              # Number of traces after which a batch will be sent regardless of the timeout.
+              send_batch_size: integer(),
+              # Time duration after which a batch will be sent regardless of size.
+              timeout: {non_neg_integer(), :milliseconds}
+            },
+            # Queued spans for sending.
+            resource_spans: [ResourceSpan.t()],
+            # Last send of spans
+            last_send: DateTime.t()
+          }
 
     defstruct [
       :channel,
-      :metadata
+      :metadata,
+      :batch,
+      :resource_spans,
+      :last_send
     ]
   end
 
@@ -73,11 +101,17 @@ defmodule SpandexOTLP.Sender do
 
     case connect(config) do
       {:ok, channel} ->
-        {:ok,
-         %State{
-           channel: channel,
-           metadata: Map.get(config, :headers, %{})
-         }}
+        state =
+          %State{
+            channel: channel,
+            metadata: Map.get(config, :headers, %{}),
+            batch: config[:batch],
+            resource_spans: [],
+            last_send: DateTime.utc_now()
+          }
+          |> schedule_batch_timeout_check()
+
+        {:ok, state}
 
       {:error, reason} ->
         {:stop, reason}
@@ -113,10 +147,44 @@ defmodule SpandexOTLP.Sender do
     end)
   end
 
-  @doc false
-  def handle_call({:send_trace, trace}, _from, state) do
-    request =
-      ExportTraceServiceRequest.new(resource_spans: Conversion.traces_to_resource_spans([trace]))
+  @spec convert_and_enqueue_span(State.t(), Trace.t()) :: State.t()
+  defp convert_and_enqueue_span(state, trace) do
+    %{
+      state
+      | resource_spans: Conversion.traces_to_resource_spans([trace]) ++ state.resource_spans
+    }
+  end
+
+  @spec maybe_send_batch(State.t()) :: State.t()
+  defp maybe_send_batch(state) do
+    with true <- spans_to_send?(state),
+         true <- exceeds_send_batch_size?(state) || elapsed_batch_timeout?(state) do
+      send_batch(state)
+    else
+      false -> state
+    end
+  end
+
+  @spec exceeds_send_batch_size?(State.t()) :: boolean()
+  defp exceeds_send_batch_size?(state) do
+    length(state.resource_spans) >= state.batch.send_batch_size
+  end
+
+  @spec spans_to_send?(State.t()) :: boolean()
+  defp spans_to_send?(state) do
+    length(state.resource_spans) > 0
+  end
+
+  # Returns a State struct with spans removed and the spans removed in a tuple.
+  @spec empty_spans(State.t()) :: {State.t(), [ResourceSpans.t()]}
+  defp empty_spans(state) do
+    {%{state | resource_spans: []}, state.resource_spans}
+  end
+
+  defp send_batch(state) do
+    {state, resource_spans} = empty_spans(state)
+
+    request = ExportTraceServiceRequest.new(resource_spans: resource_spans)
 
     case TraceService.Stub.export(state.channel, request, metadata: state.metadata) do
       {:ok, _response} ->
@@ -126,10 +194,39 @@ defmodule SpandexOTLP.Sender do
         Logger.error("Error while exporting trace data: #{inspect(error)}")
     end
 
+    %{state | last_send: DateTime.utc_now()}
+  end
+
+  @doc false
+  def handle_call({:send_trace, trace}, _from, state) do
+    state =
+      state
+      |> convert_and_enqueue_span(trace)
+      |> maybe_send_batch()
+
     {:reply, :ok, state}
+  end
+
+  @doc false
+  def handle_info(:timeout_check, state) do
+    {:noreply, state |> maybe_send_batch() |> schedule_batch_timeout_check()}
   end
 
   def handle_info(_, state) do
     {:noreply, state}
+  end
+
+  @spec elapsed_batch_timeout?(State.t()) :: boolean()
+  defp elapsed_batch_timeout?(state) do
+    now = DateTime.utc_now()
+    {timeout_millis, :milliseconds} = state.batch.timeout
+    DateTime.diff(now, state.last_send, :millisecond) > timeout_millis
+  end
+
+  @spec schedule_batch_timeout_check(State.t()) :: State.t()
+  defp schedule_batch_timeout_check(state) do
+    {ms, :milliseconds} = state.batch.timeout
+    Process.send_after(self(), :timeout_check, ms)
+    state
   end
 end
