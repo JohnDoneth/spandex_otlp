@@ -89,12 +89,15 @@ defmodule SpandexOTLP.ConversionTest do
     test "converts exceptions to errors" do
       {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
 
-      converted_span = Conversion.convert_span(span_factory(
-        error: [
-          exception: ArgumentError.exception("foo"),
-          stacktrace: stacktrace
-        ]
-      ))
+      converted_span =
+        Conversion.convert_span(
+          span_factory(
+            error: [
+              exception: ArgumentError.exception("foo"),
+              stacktrace: stacktrace
+            ]
+          )
+        )
 
       assert converted_span.status.code == :STATUS_CODE_ERROR
       assert converted_span.status.message == "foo"
@@ -110,43 +113,49 @@ defmodule SpandexOTLP.ConversionTest do
              )
 
       assert Enum.member?(
-              converted_span.attributes,
-              %KeyValue{
-                key: "exception.type",
-                value: %AnyValue{
-                  value: {:string_value, "ArgumentError"}
-                }
-              }
-            )
+               converted_span.attributes,
+               %KeyValue{
+                 key: "exception.type",
+                 value: %AnyValue{
+                   value: {:string_value, "ArgumentError"}
+                 }
+               }
+             )
 
       assert Enum.member?(
-              converted_span.attributes,
-              %KeyValue{
-                key: "exception.stacktrace",
-                value: %AnyValue{
-                  value: {:string_value, Exception.format_stacktrace(stacktrace)}
-                }
-              }
-            )
+               converted_span.attributes,
+               %KeyValue{
+                 key: "exception.stacktrace",
+                 value: %AnyValue{
+                   value: {:string_value, Exception.format_stacktrace(stacktrace)}
+                 }
+               }
+             )
     end
 
     test "converts message only errors to errors" do
-      converted_span = Conversion.convert_span(span_factory(
-        error: [
-          message: "something bad happened"
-        ]
-      ))
+      converted_span =
+        Conversion.convert_span(
+          span_factory(
+            error: [
+              message: "something bad happened"
+            ]
+          )
+        )
 
       assert converted_span.status.code == :STATUS_CODE_ERROR
       assert converted_span.status.message == "something bad happened"
     end
 
     test "converts message with error? flag" do
-      converted_span = Conversion.convert_span(span_factory(
-        error: [
-          error?: true
-        ]
-      ))
+      converted_span =
+        Conversion.convert_span(
+          span_factory(
+            error: [
+              error?: true
+            ]
+          )
+        )
 
       assert converted_span.status.code == :STATUS_CODE_ERROR
       assert converted_span.status.message == nil

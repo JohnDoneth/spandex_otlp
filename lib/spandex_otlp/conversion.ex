@@ -61,6 +61,7 @@ defmodule SpandexOTLP.Conversion do
       code: :STATUS_CODE_OK
     }
   end
+
   defp convert_status(%Span{error: error}) do
     %SpandexOTLP.Opentelemetry.Proto.Trace.V1.Status{
       deprecated_code: :DEPRECATED_STATUS_CODE_UNAVAILABLE,
@@ -112,18 +113,21 @@ defmodule SpandexOTLP.Conversion do
 
   @spec add_error_type(map(), Exception.t() | nil) :: map()
   defp add_error_type(attrs, nil), do: attrs
+
   defp add_error_type(attrs, exception) do
     Map.put(attrs, "exception.type", inspect(exception.__struct__))
   end
 
   @spec add_error_message(map(), Exception.t() | nil) :: map()
   defp add_error_message(attrs, nil), do: attrs
+
   defp add_error_message(attrs, exception) do
     Map.put(attrs, "exception.message", Exception.message(exception))
   end
 
   @spec add_error_stacktrace(map(), Exception.t() | nil) :: map()
   defp add_error_stacktrace(attrs, nil), do: attrs
+
   defp add_error_stacktrace(attrs, stacktrace) do
     Map.put(attrs, "exception.stacktrace", Exception.format_stacktrace(stacktrace))
   end
