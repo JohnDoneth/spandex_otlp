@@ -157,12 +157,22 @@ defmodule SpandexOTLP.Sender do
 
   @spec maybe_send_batch(State.t()) :: State.t()
   defp maybe_send_batch(state) do
-    if length(state.resource_spans) >= state.batch.send_batch_size ||
-         elapsed_batch_timeout?(state) do
+    with true <- spans_to_send?(state),
+         true <- exceeds_send_batch_size?(state) || elapsed_batch_timeout?(state) do
       send_batch(state)
     else
-      state
+      false -> state
     end
+  end
+
+  @spec exceeds_send_batch_size?(State.t()) :: boolean()
+  defp exceeds_send_batch_size?(state) do
+    length(state.resource_spans) >= state.batch.send_batch_size
+  end
+
+  @spec spans_to_send?(State.t()) :: boolean()
+  defp spans_to_send?(state) do
+    length(state.resource_spans) > 0
   end
 
   # Returns a State struct with spans removed and the spans removed in a tuple.
