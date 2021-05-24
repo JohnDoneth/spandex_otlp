@@ -131,8 +131,6 @@ defmodule SpandexOTLP.ConversionTest do
     end
 
     test "converts message only errors to errors" do
-      {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
-
       converted_span = Conversion.convert_span(span_factory(
         error: [
           message: "something bad happened"
